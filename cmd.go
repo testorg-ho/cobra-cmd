@@ -14,8 +14,8 @@ var (
 	ticketList []string // Shared variable to store the parsed ticket list
 )
 
-// RootCmd represents the base command when called without any subcommands
-var RootCmd = &cobra.Command{
+// rootCmd represents the base command when called without any subcommands
+var rootCmd = &cobra.Command{
 	Use:   "cobra-cmd",
 	Short: "A CLI application for processing and partitioning tickets",
 	Long: `A CLI application that provides functionality for processing 
@@ -86,15 +86,15 @@ var partitionCmd = &cobra.Command{
 
 func init() {
 	// Add persistent flags that will be available to all subcommands
-	RootCmd.PersistentFlags().StringVar(&tickets, "tickets", "", "Comma-separated list of JIRA tickets to process (must start with ABC- prefix)")
-	RootCmd.PersistentFlags().StringVar(&version, "fix-version", "", "Version for processing")
+	rootCmd.PersistentFlags().StringVar(&tickets, "tickets", "", "Comma-separated list of JIRA tickets to process (must start with ABC- prefix)")
+	rootCmd.PersistentFlags().StringVar(&version, "fix-version", "", "Version for processing")
 
 	// Add partition-specific flags
 	partitionCmd.Flags().StringVar(&filename, "filename", "default_partition.txt", "Output filename for partitioned tickets")
 
 	// Add commands to the root command
-	RootCmd.AddCommand(processCmd)
-	RootCmd.AddCommand(partitionCmd)
+	rootCmd.AddCommand(processCmd)
+	rootCmd.AddCommand(partitionCmd)
 }
 
 // GetTicketList returns the parsed ticket list for use in any command
