@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -14,8 +15,9 @@ var processCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Process command called")
 
-		if tickets != "" {
-			fmt.Printf("Processing tickets: %s\n", tickets)
+		processTickets := GetTicketList()
+		if len(processTickets) > 0 {
+			fmt.Printf("Processing tickets: %s\n", strings.Join(processTickets, ","))
 		} else {
 			fmt.Println("No tickets specified")
 		}

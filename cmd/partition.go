@@ -2,14 +2,13 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
 
 var (
-	// Using a different variable for tickets to avoid conflicts
-	partitionTickets string
-	filename         string
+	filename string
 )
 
 // partitionCmd represents the partition command
@@ -20,8 +19,9 @@ var partitionCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Partition command called")
 
-		if partitionTickets != "" {
-			fmt.Printf("Partitioning tickets: %s\n", partitionTickets)
+		partitionTickets := GetTicketList()
+		if len(partitionTickets) > 0 {
+			fmt.Printf("Partitioning tickets: %s\n", strings.Join(partitionTickets, ","))
 		} else {
 			fmt.Println("No tickets specified")
 		}
@@ -31,6 +31,6 @@ var partitionCmd = &cobra.Command{
 }
 
 func init() {
-	partitionCmd.Flags().StringVar(&partitionTickets, "tickets", "", "Comma-separated list of JIRA tickets to partition")
 	partitionCmd.Flags().StringVar(&filename, "filename", "default_partition.txt", "Output filename for partitioned tickets")
+	// Remove the local tickets flag as we're using the global one now
 }

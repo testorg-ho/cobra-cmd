@@ -8,8 +8,9 @@ import (
 )
 
 var (
-	tickets string
-	version string
+	tickets    string
+	version    string
+	ticketList []string // Shared variable to store the parsed ticket list
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -29,7 +30,7 @@ and partitioning JIRA tickets through two commands: process and partition.`,
 
 		// Validate tickets flag if it's not empty
 		if tickets != "" {
-			ticketList := strings.Split(tickets, ",")
+			ticketList = strings.Split(tickets, ",")
 			for _, ticket := range ticketList {
 				if !strings.HasPrefix(ticket, "ABC-") {
 					return fmt.Errorf("invalid ticket format: %s, must start with ABC- prefix", ticket)
@@ -48,4 +49,9 @@ func init() {
 	// Add commands to the root command
 	RootCmd.AddCommand(processCmd)
 	RootCmd.AddCommand(partitionCmd)
+}
+
+// GetTicketList returns the parsed ticket list for use in any command
+func GetTicketList() []string {
+	return ticketList
 }
