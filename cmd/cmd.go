@@ -1,3 +1,4 @@
+// filepath: /Users/tarashrynchuk/cobra-cmd/cmd/cmd.go
 package cmd
 
 import (
@@ -10,6 +11,7 @@ import (
 var (
 	tickets    string
 	version    string
+	filename   string
 	ticketList []string // Shared variable to store the parsed ticket list
 )
 
@@ -41,10 +43,55 @@ and partitioning JIRA tickets through two commands: process and partition.`,
 	},
 }
 
+// processCmd represents the process command
+var processCmd = &cobra.Command{
+	Use:   "process",
+	Short: "Process JIRA tickets",
+	Long:  `Process JIRA tickets with optional version specification.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Process command called")
+
+		processTickets := GetTicketList()
+		if len(processTickets) > 0 {
+			fmt.Printf("Processing tickets: %s\n", strings.Join(processTickets, ","))
+		} else {
+			fmt.Println("No tickets specified")
+		}
+
+		if version != "" {
+			fmt.Printf("Fix-version: %s\n", version)
+		} else {
+			fmt.Println("No fix-version specified")
+		}
+	},
+}
+
+// partitionCmd represents the partition command
+var partitionCmd = &cobra.Command{
+	Use:   "partition",
+	Short: "Partition JIRA tickets",
+	Long:  `Partition JIRA tickets into a specified file or default file.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Partition command called")
+
+		partitionTickets := GetTicketList()
+		if len(partitionTickets) > 0 {
+			fmt.Printf("Partitioning tickets: %s\n", strings.Join(partitionTickets, ","))
+		} else {
+			fmt.Println("No tickets specified")
+		}
+
+		fmt.Printf("Using filename: %s\n", filename)
+	},
+}
+
 func init() {
 	// Add persistent flags that will be available to all subcommands
 	RootCmd.PersistentFlags().StringVar(&tickets, "tickets", "", "Comma-separated list of JIRA tickets to process (must start with ABC- prefix)")
 	RootCmd.PersistentFlags().StringVar(&version, "fix-version", "", "Version for processing")
+
+	// Add partition-specific flags
+	partitionCmd.Flags().StringVar(&filename, "filename", "default_partition.txt", "Output filename for partitioned tickets")
 
 	// Add commands to the root command
 	RootCmd.AddCommand(processCmd)
