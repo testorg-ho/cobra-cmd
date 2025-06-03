@@ -21,9 +21,9 @@ var processCmd = &cobra.Command{
 		}
 
 		if version != "" {
-			fmt.Printf("Version: %s\n", version)
+			fmt.Printf("Fix-version: %s\n", version)
 		} else {
-			fmt.Println("No version specified")
+			fmt.Println("No fix-version specified")
 		}
 	},
 }
