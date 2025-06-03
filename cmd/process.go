@@ -6,11 +6,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	tickets string
-	version string
-)
-
 // processCmd represents the process command
 var processCmd = &cobra.Command{
 	Use:   "process",
@@ -34,6 +29,5 @@ var processCmd = &cobra.Command{
 }
 
 func init() {
-	processCmd.Flags().StringVar(&tickets, "tickets", "", "Comma-separated list of JIRA tickets to process")
-	processCmd.Flags().StringVar(&version, "version", "", "Version for processing")
+	// Removed flag declarations as they're now defined as persistent flags in root.go
 }

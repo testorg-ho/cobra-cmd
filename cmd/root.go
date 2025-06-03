@@ -4,6 +4,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	tickets string
+	version string
+)
+
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "cobra-cmd",
@@ -16,6 +21,10 @@ and partitioning JIRA tickets through two commands: process and partition.`,
 }
 
 func init() {
+	// Add persistent flags that will be available to all subcommands
+	RootCmd.PersistentFlags().StringVar(&tickets, "tickets", "", "Comma-separated list of JIRA tickets to process")
+	RootCmd.PersistentFlags().StringVar(&version, "version", "", "Version for processing")
+
 	// Add commands to the root command
 	RootCmd.AddCommand(processCmd)
 	RootCmd.AddCommand(partitionCmd)
