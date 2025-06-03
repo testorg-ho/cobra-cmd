@@ -3,12 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
-
-	"github.com/testorg-ho/cobra-cmd"
 )
 
 func main() {
-	if err := cmd.RootCmd.Execute(); err != nil {
+	if err := RootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
