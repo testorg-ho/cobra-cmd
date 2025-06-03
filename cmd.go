@@ -1,4 +1,3 @@
-// filepath: /Users/tarashrynchuk/cobra-cmd/cmd/cmd.go
 package cmd
 
 import (

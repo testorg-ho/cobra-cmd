@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/testorg-ho/cobra-cmd/cmd"
+	"github.com/testorg-ho/cobra-cmd"
 )
 
 func main() {
