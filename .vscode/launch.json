@@ -1,0 +1,42 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run Partition Command",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}",
+            "args": [
+                "partition",
+                "--tickets", "ABC-123,ABC-456",
+                "--filename", "custom_partition.txt"
+            ]
+        },
+        {
+            "name": "Run Partition with Version",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}",
+            "args": [
+                "partition",
+                "--tickets", "ABC-123,ABC-456",
+                "--fix-version", "v1.0.0",
+                "--filename", "versioned_partition.txt"
+            ]
+        },
+        {
+            "name": "Run Process Command",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}",
+            "args": [
+                "process",
+                "--tickets", "ABC-789,ABC-101",
+                "--fix-version", "v1.2.3"
+            ]
+        }
+    ]
+}
