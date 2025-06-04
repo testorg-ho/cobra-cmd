@@ -20,8 +20,8 @@ var rootCmd = &cobra.Command{
 	Short: "A CLI application for processing and partitioning tickets",
 	Long: `A CLI application that provides functionality for processing 
 and partitioning JIRA tickets through two commands: process and partition.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		processCmd.Run(processCmd, args)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return processCmd.RunE(processCmd, args)
 	},
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// Skip validation for help and completion commands
@@ -47,7 +47,7 @@ var processCmd = &cobra.Command{
 	Use:   "process",
 	Short: "Process JIRA tickets",
 	Long:  `Process JIRA tickets with optional version specification.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("Process command called")
 
 		processTickets := GetTicketList()
@@ -62,6 +62,8 @@ var processCmd = &cobra.Command{
 		} else {
 			fmt.Println("No fix-version specified")
 		}
+
+		return nil
 	},
 }
 
@@ -70,7 +72,7 @@ var partitionCmd = &cobra.Command{
 	Use:   "partition",
 	Short: "Partition JIRA tickets",
 	Long:  `Partition JIRA tickets into a specified file or default file.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("Partition command called")
 
 		partitionTickets := GetTicketList()
@@ -81,6 +83,8 @@ var partitionCmd = &cobra.Command{
 		}
 
 		fmt.Printf("Using filename: %s\n", filename)
+
+		return nil
 	},
 }
 
