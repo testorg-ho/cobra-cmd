@@ -1,0 +1,93 @@
+name: Test Sign Workflow
+
+on:
+  workflow_dispatch:  # Manual trigger
+  schedule:
+    - cron: '0 9 * * *'  # Daily at 9 AM UTC (optional)
+
+jobs:
+  test-sign:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Generate timestamp
+      id: timestamp
+      run: echo "timestamp=$(date +%Y%m%d_%H%M%S)" >> $GITHUB_OUTPUT
+    
+    - name: Create new branch
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        REPO_OWNER: "your-username"  # Replace with actual username
+        REPO_NAME: "your-repo-name"   # Replace with actual repo name
+      run: |
+        # Get the latest commit SHA from main branch
+        MAIN_SHA=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+          "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/git/refs/heads/main" | \
+          jq -r '.object.sha')
+        
+        echo "Main branch SHA: $MAIN_SHA"
+        
+        # Create new branch
+        BRANCH_NAME="test_sign_${{ steps.timestamp.outputs.timestamp }}"
+        echo "Creating branch: $BRANCH_NAME"
+        
+        curl -X POST \
+          -H "Authorization: token $GITHUB_TOKEN" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/git/refs" \
+          -d "{
+            \"ref\": \"refs/heads/$BRANCH_NAME\",
+            \"sha\": \"$MAIN_SHA\"
+          }"
+        
+        echo "branch_name=$BRANCH_NAME" >> $GITHUB_ENV
+    
+    - name: Get current README content
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        REPO_OWNER: "your-username"  # Replace with actual username
+        REPO_NAME: "your-repo-name"   # Replace with actual repo name
+      run: |
+        # Get README file content
+        README_RESPONSE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+          "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/contents/README.md?ref=${{ env.branch_name }}")
+        
+        # Extract content and SHA
+        README_CONTENT=$(echo "$README_RESPONSE" | jq -r '.content' | base64 -d)
+        README_SHA=$(echo "$README_RESPONSE" | jq -r '.sha')
+        
+        echo "README_SHA=$README_SHA" >> $GITHUB_ENV
+        
+        # Add new line with "Test"
+        NEW_CONTENT=$(echo "$README_CONTENT" && echo "Test")
+        
+        # Base64 encode the new content
+        NEW_CONTENT_B64=$(echo "$NEW_CONTENT" | base64 -w 0)
+        echo "NEW_CONTENT_B64=$NEW_CONTENT_B64" >> $GITHUB_ENV
+    
+    - name: Commit changes to branch
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        REPO_OWNER: "your-username"  # Replace with actual username
+        REPO_NAME: "your-repo-name"   # Replace with actual repo name
+      run: |
+        # Update README.md file
+        curl -X PUT \
+          -H "Authorization: token $GITHUB_TOKEN" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/contents/README.md" \
+          -d "{
+            \"message\": \"Add test line to README\",
+            \"content\": \"$NEW_CONTENT_B64\",
+            \"sha\": \"$README_SHA\",
+            \"branch\": \"${{ env.branch_name }}\"
+          }"
+        
+        echo "✅ Successfully committed changes to branch: ${{ env.branch_name }}"
+    
+    - name: Output results
+      run: |
+        echo "🎉 Workflow completed successfully!"
+        echo "📝 Branch created: ${{ env.branch_name }}"
+        echo "📄 README.md updated with 'Test' line"
+        echo "🔗 View branch at: https://github.com/$REPO_OWNER/$REPO_NAME/tree/${{ env.branch_name }}"

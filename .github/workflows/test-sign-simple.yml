@@ -1,0 +1,114 @@
+name: Test Sign Workflow (REST API)
+
+on:
+  workflow_dispatch:  # Manual trigger
+  schedule:
+    - cron: '0 9 * * *'  # Daily at 9 AM UTC (optional)
+
+jobs:
+  test-sign-api:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Generate timestamp and branch name
+      id: setup
+      run: |
+        TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+        BRANCH_NAME="test_sign_$TIMESTAMP"
+        echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+        echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+        echo "✅ Generated branch name: $BRANCH_NAME"
+    
+    - name: Get main branch SHA
+      id: main_sha
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        MAIN_SHA=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/${{ github.repository }}/git/refs/heads/main" | \
+          jq -r '.object.sha')
+        
+        echo "main_sha=$MAIN_SHA" >> $GITHUB_OUTPUT
+        echo "✅ Main branch SHA: $MAIN_SHA"
+    
+    - name: Create new branch
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        RESPONSE=$(curl -s -w "%{http_code}" -o /tmp/create_branch.json \
+          -X POST \
+          -H "Authorization: Bearer $GITHUB_TOKEN" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/${{ github.repository }}/git/refs" \
+          -d "{
+            \"ref\": \"refs/heads/${{ steps.setup.outputs.branch_name }}\",
+            \"sha\": \"${{ steps.main_sha.outputs.main_sha }}\"
+          }")
+        
+        HTTP_CODE=$(echo $RESPONSE | tail -c 4)
+        
+        if [ "$HTTP_CODE" = "201" ]; then
+          echo "✅ Successfully created branch: ${{ steps.setup.outputs.branch_name }}"
+        else
+          echo "❌ Failed to create branch. HTTP code: $HTTP_CODE"
+          cat /tmp/create_branch.json
+          exit 1
+        fi
+    
+    - name: Prepare README content with timestamp
+      id: readme_content
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        README_RESPONSE=$(curl -s \
+          -H "Authorization: Bearer $GITHUB_TOKEN" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/${{ github.repository }}/contents/README.md?ref=main")
+        
+        # Extract SHA (we only need SHA, not the content since we're replacing everything)
+        README_SHA=$(echo "$README_RESPONSE" | jq -r '.sha')
+        
+        # Replace entire content with just the timestamp
+        NEW_CONTENT="${{ steps.setup.outputs.timestamp }}"
+        
+        # Base64 encode the new content
+        NEW_CONTENT_B64=$(echo "$NEW_CONTENT" | base64 -w 0)
+        
+        echo "readme_sha=$README_SHA" >> $GITHUB_OUTPUT
+        echo "new_content_b64=$NEW_CONTENT_B64" >> $GITHUB_OUTPUT
+        echo "✅ Prepared README content with timestamp: ${{ steps.setup.outputs.timestamp }}"
+    
+    - name: Update README in new branch
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        RESPONSE=$(curl -s -w "%{http_code}" -o /tmp/update_readme.json \
+          -X PUT \
+          -H "Authorization: Bearer $GITHUB_TOKEN" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/${{ github.repository }}/contents/README.md" \
+          -d "{
+            \"message\": \"Replace README with timestamp via GitHub API\",
+            \"content\": \"${{ steps.readme_content.outputs.new_content_b64 }}\",
+            \"sha\": \"${{ steps.readme_content.outputs.readme_sha }}\",
+            \"branch\": \"${{ steps.setup.outputs.branch_name }}\"
+          }")
+        
+        HTTP_CODE=$(echo $RESPONSE | tail -c 4)
+        
+        if [ "$HTTP_CODE" = "200" ]; then
+          echo "✅ Successfully updated README.md in branch: ${{ steps.setup.outputs.branch_name }}"
+        else
+          echo "❌ Failed to update README. HTTP code: $HTTP_CODE"
+          cat /tmp/update_readme.json
+          exit 1
+        fi
+    
+    - name: Output results
+      run: |
+        echo "🎉 Workflow completed successfully using GitHub REST API!"
+        echo "📝 Branch created: ${{ steps.setup.outputs.branch_name }}"
+        echo "📄 README.md replaced with timestamp: ${{ steps.setup.outputs.timestamp }}"
+        echo "🔗 View branch at: https://github.com/${{ github.repository }}/tree/${{ steps.setup.outputs.branch_name }}"
+        echo "🔗 Compare changes: https://github.com/${{ github.repository }}/compare/main...${{ steps.setup.outputs.branch_name }}"
