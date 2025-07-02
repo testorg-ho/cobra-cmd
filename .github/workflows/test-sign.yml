@@ -1,9 +1,5 @@
 name: Test Sign Workflow
 
-on:
-  workflow_dispatch:  # Manual trigger
-  schedule:
-    - cron: '0 9 * * *'  # Daily at 9 AM UTC (optional)
 
 jobs:
   test-sign:
